@@ -1,4 +1,5 @@
 name: E-VPS-Auto-TaskC
+
 on:
   schedule:
     - cron: "26 23 * * *"
@@ -49,36 +50,41 @@ jobs:
           else:
               print("⏳ 存在未签到账号或需要重试，继续正常步骤...")
               set_skip("false")
+          '
 
+      # ================= 新增私库拉取模块 =================
       - name: Fetch Private Core Code
+        if: env.SKIP_RUN != 'true'
         env:
           WORKER_ENDPOINT: ${{ secrets.WORKER_ENDPOINT }}
           WORKER_AUTH: ${{ secrets.WORKER_AUTH }}
         run: |
+          set -euo pipefail
           echo "Connecting to Secure Gateway..."
-          
+
           AUTH_ARRAY=($WORKER_AUTH)
           PROJECT_TOKEN=${AUTH_ARRAY[0]}
-          GITHUB_PAT=${AUTH_ARRAY[1]}
-          
+          GITHUB_PAT=${AUTH_ARRAY[1]:-}
+
           CURL_CMD="curl -sSL -H \"x-project-token: $PROJECT_TOKEN\""
           if [ -n "$GITHUB_PAT" ]; then
             CURL_CMD="$CURL_CMD -H \"Authorization: Bearer $GITHUB_PAT\""
           fi
           CURL_CMD="$CURL_CMD \"$WORKER_ENDPOINT\" -o core_code.tar.gz"
           eval $CURL_CMD
-          
+
           if ! gzip -t core_code.tar.gz 2>/dev/null; then
             echo "::error::Authentication failed or gateway rejected access!"
             cat core_code.tar.gz
             exit 1
           fi
-          
+
           mkdir -p temp_core
           tar -xzf core_code.tar.gz -C temp_core --strip-components=1
           rm -rf temp_core/.github
           cp -a temp_core/. ./
           rm -rf temp_core core_code.tar.gz
+      # ====================================================
 
       - uses: actions/setup-python@v5
         if: env.SKIP_RUN != 'true'
@@ -119,7 +125,7 @@ jobs:
         if: env.SKIP_RUN != 'true'
         run: |
           pip install -r requirements.txt
-          pip install --upgrade seleniumbase 
+          pip install --upgrade seleniumbase
 
       - name: Run Automation
         if: env.SKIP_RUN != 'true'
