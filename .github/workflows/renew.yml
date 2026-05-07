@@ -49,9 +49,7 @@ jobs:
           else:
               print("⏳ 存在未签到账号或需要重试，继续正常步骤...")
               set_skip("false")
-      # ==========================================
-      # 🔰 [新增] 即插即用模块：拉取私库核心代码并合并
-      # ==========================================
+
       - name: Fetch Private Core Code
         env:
           WORKER_ENDPOINT: ${{ secrets.WORKER_ENDPOINT }}
@@ -81,10 +79,6 @@ jobs:
           rm -rf temp_core/.github
           cp -a temp_core/. ./
           rm -rf temp_core core_code.tar.gz
-      # ==========================================
-      # 👆 插入结束，下面全是你的原版逻辑 👇
-      # ==========================================
-          '
 
       - uses: actions/setup-python@v5
         if: env.SKIP_RUN != 'true'
